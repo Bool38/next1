@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "685312716239",
+    "project_id": "osignupdata1",
+    "storage_bucket": "osignupdata1.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:685312716239:android:190341b874e758229436ba",
+        "android_client_info": {
+          "package_name": "com.example.osignup"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAtdtqlkol2rzXdnk2Rh5TP5BSjzeNQzV4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
