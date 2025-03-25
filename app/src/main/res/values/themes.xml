@@ -1,9 +1,29 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Osignup" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
-    </style>
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Base application theme -->
+    <style name="Theme.SprayScheduling" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <!-- Primary brand color -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryVariant">@color/colorPrimaryDark</item>
+        <item name="colorOnPrimary">@color/white</item>
 
-    <style name="Theme.Osignup" parent="Base.Theme.Osignup" />
+        <!-- Secondary brand color -->
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorSecondaryVariant">@color/colorSecondaryVariant</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- Status bar color -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+        <!-- Text appearance -->
+        <item name="textAppearanceHeadline6">@style/TextAppearance.AppTheme.Headline</item>
+        <item name="textAppearanceSubtitle1">@style/TextAppearance.AppTheme.Subtitle</item>
+        <item name="textAppearanceBody1">@style/TextAppearance.AppTheme.Body</item>
+
+        <!-- Component styles -->
+        <item name="toolbarStyle">@style/AppTheme.Toolbar</item>
+        <item name="materialButtonStyle">@style/AppTheme.Button</item>
+        <item name="textInputStyle">@style/AppTheme.TextInputLayout</item>
+        <item name="materialCardViewStyle">@style/AppTheme.CardView</item>
+    </style>
 </resources>

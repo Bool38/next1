@@ -3,11 +3,13 @@ package com.example.osignup;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.cardview.widget.CardView;
 
 import com.google.firebase.auth.FirebaseAuth;
@@ -20,8 +22,10 @@ import com.google.firebase.database.ValueEventListener;
 
 public class DashboardActivity extends AppCompatActivity {
 
-    private TextView tvUserName, tvUserEmail;
-    private CardView appleCard, plumCard;
+    private TextView tvUsername, tvEmail;
+    private CardView cardApple;
+    private Button btnLogout;
+    private ImageButton btnEditProfile;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
 
@@ -30,72 +34,97 @@ public class DashboardActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
 
-        // Initialize Firebase Auth and Database
+        // Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        // Initialize views
-        tvUserName = findViewById(R.id.tvUserName);
-        tvUserEmail = findViewById(R.id.tvUserEmail);
-        appleCard = findViewById(R.id.appleCard);
-        plumCard = findViewById(R.id.plumCard);
+        // Initialize UI components
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        tvUsername = findViewById(R.id.tvUsername);
+        tvEmail = findViewById(R.id.tvEmail);
+        cardApple = findViewById(R.id.cardApple);
+        btnLogout = findViewById(R.id.btnLogout);
+        btnEditProfile = findViewById(R.id.btnEditProfile);
 
         // Check if user is logged in
-        FirebaseUser currentUser = mAuth.getCurrentUser();
         if (currentUser == null) {
-            // User not logged in, redirect to login
-            startActivity(new Intent(DashboardActivity.this, LoginActivity.class));
+            // Redirect to login
+            startActivity(new Intent(DashboardActivity.this, MainActivity.class));
             finish();
             return;
         }
 
-        // Set email from current user
-        tvUserEmail.setText(currentUser.getEmail());
+        // Set email from Firebase Auth
+        if (currentUser.getEmail() != null) {
+            tvEmail.setText(currentUser.getEmail());
+        }
 
-        // Load user data from database
-        loadUserData(currentUser.getUid());
+        // Get username from database
+        String userId = currentUser.getUid();
+        mDatabase.child("users").child(userId).child("profile").child("username")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        if (dataSnapshot.exists()) {
+                            // Bug Fix: Handle username properly
+                            String username = dataSnapshot.getValue(String.class);
+                            if (username != null && !username.isEmpty()) {
+                                tvUsername.setText(username);
+                            } else {
+                                tvUsername.setText("User");
+                                // If username doesn't exist, create one based on email
+                                createDefaultUsername(userId, currentUser.getEmail());
+                            }
+                        } else {
+                            tvUsername.setText("User");
+                            // If username node doesn't exist, create one based on email
+                            createDefaultUsername(userId, currentUser.getEmail());
+                        }
+                    }
 
-        // Set click listeners for category cards
-        appleCard.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        tvUsername.setText("User");
+                        Toast.makeText(DashboardActivity.this,
+                                "Failed to load profile: " + databaseError.getMessage(),
+                                Toast.LENGTH_SHORT).show();
+                    }
+                });
+
+        // Button click listeners
+        cardApple.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // Navigate to Spray Scheduling screen
-                startActivity(new Intent(DashboardActivity.this, SpraySchedulingActivity.class));
+                startActivity(new Intent(DashboardActivity.this, AppleSectionActivity.class));
             }
         });
 
-        plumCard.setOnClickListener(new View.OnClickListener() {
+        btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // For now, just show a toast message
-                Toast.makeText(DashboardActivity.this, "Plum module coming soon!", Toast.LENGTH_SHORT).show();
+                mAuth.signOut();
+                startActivity(new Intent(DashboardActivity.this, MainActivity.class));
+                finish();
+            }
+        });
+
+        btnEditProfile.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(DashboardActivity.this, "Edit Profile feature coming soon", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    private void loadUserData(String userId) {
-        mDatabase.child("users").child(userId).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
-                if (dataSnapshot.exists()) {
-                    // Get user email from database
-                    String email = dataSnapshot.child("email").getValue(String.class);
-                    if (email != null) {
-                        // Extract username from email (part before @)
-                        String username = email.split("@")[0];
-                        // Capitalize first letter
-                        username = username.substring(0, 1).toUpperCase() + username.substring(1);
-                        tvUserName.setText(username);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(@NonNull DatabaseError databaseError) {
-                Toast.makeText(DashboardActivity.this,
-                        "Failed to load user data: " + databaseError.getMessage(),
-                        Toast.LENGTH_SHORT).show();
-            }
-        });
+    // Create default username if not found
+    private void createDefaultUsername(String userId, String email) {
+        if (email != null) {
+            String username = email.substring(0, email.indexOf('@'));
+            mDatabase.child("users").child(userId).child("profile").child("username").setValue(username);
+            tvUsername.setText(username);
+        }
     }
 }

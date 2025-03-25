@@ -18,9 +18,9 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ServerValue;
 
 import java.util.HashMap;
+import java.util.Map;
 
 public class SignupActivity extends AppCompatActivity {
 
@@ -46,22 +46,13 @@ public class SignupActivity extends AppCompatActivity {
         btnLogin = findViewById(R.id.btnLogin);
 
         // Set up Sign Up button click listener
-        btnSignup.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                registerUser();
-            }
-        });
+        btnSignup.setOnClickListener(v -> registerUser());
 
         // Set up Login button click listener
-        btnLogin.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Navigate to Login Activity
-                Intent intent = new Intent(SignupActivity.this, LoginActivity.class);
-                startActivity(intent);
-                finish();
-            }
+        btnLogin.setOnClickListener(v -> {
+            // Navigate to Login Activity
+            startActivity(new Intent(SignupActivity.this, LoginActivity.class));
+            finish();
         });
     }
 
@@ -99,60 +90,38 @@ public class SignupActivity extends AppCompatActivity {
 
         // Create user with email and password
         mAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // User created successfully
-                            String userId = mAuth.getCurrentUser().getUid();
+                .addOnCompleteListener(task -> {
+                    progressDialog.dismiss(); // Ensure progress dialog is dismissed
 
-                            // Reference to users node in Realtime Database
-                            DatabaseReference userRef = mDatabase.child("users").child(userId);
+                    if (task.isSuccessful()) {
+                        // User created successfully
+                        String userId = mAuth.getCurrentUser().getUid();
+                        DatabaseReference userRef = mDatabase.child("users").child(userId);
 
-                            // Create user data map with more information
-                            HashMap<String, Object> userData = new HashMap<>();
-                            userData.put("userId", userId);
-                            userData.put("email", email);
-                            userData.put("name", email.substring(0, email.indexOf('@'))); // Default name from email
-                            userData.put("createdAt", ServerValue.TIMESTAMP);
-                            userData.put("accountType", "standard");
+                        // Create user profile data
+                        Map<String, Object> profileData = new HashMap<>();
+                        profileData.put("username", email.substring(0, email.indexOf('@'))); // Default username from email
+                        profileData.put("email", email);
 
-                            // Write user data to database
-                            userRef.setValue(userData)
-                                    .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                        @Override
-                                        public void onComplete(@NonNull Task<Void> dbTask) {
-                                            // Dismiss progress dialog
-                                            progressDialog.dismiss();
+                        // Create structured database format
+                        Map<String, Object> userData = new HashMap<>();
+                        userData.put("profile", profileData);
+                        userData.put("sections", new HashMap<>()); // Placeholder for future sections
 
-                                            if (dbTask.isSuccessful()) {
-                                                // Database write successful
-                                                Toast.makeText(SignupActivity.this,
-                                                        "Account created successfully",
-                                                        Toast.LENGTH_SHORT).show();
-
-                                                // Navigate to main activity
-                                                Intent intent = new Intent(SignupActivity.this, MainActivity.class);
-                                                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                                                startActivity(intent);
-                                                finish();
-                                            } else {
-                                                // Database write failed
-                                                Toast.makeText(SignupActivity.this,
-                                                        "Failed to store user data: " + dbTask.getException().getMessage(),
-                                                        Toast.LENGTH_LONG).show();
-                                            }
-                                        }
-                                    });
-                        } else {
-                            // Dismiss progress dialog
-                            progressDialog.dismiss();
-
-                            // Authentication failed
-                            Toast.makeText(SignupActivity.this,
-                                    "Registration failed: " + task.getException().getMessage(),
-                                    Toast.LENGTH_LONG).show();
-                        }
+                        // Store structured data in Firebase
+                        userRef.setValue(userData)
+                                .addOnSuccessListener(aVoid -> {
+                                    Toast.makeText(SignupActivity.this, "Registration Successful", Toast.LENGTH_SHORT).show();
+                                    startActivity(new Intent(SignupActivity.this, DashboardActivity.class));
+                                    finish();
+                                })
+                                .addOnFailureListener(e ->
+                                        Toast.makeText(SignupActivity.this, "Database Error: " + e.getMessage(), Toast.LENGTH_LONG).show());
+                    } else {
+                        // Authentication failed
+                        Toast.makeText(SignupActivity.this,
+                                "Registration failed: " + task.getException().getMessage(),
+                                Toast.LENGTH_LONG).show();
                     }
                 });
     }

@@ -1,44 +1,40 @@
 package com.example.osignup;
 
-import android.app.DatePickerDialog;
 import android.os.Bundle;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.Button;
-import android.widget.DatePicker;
-import android.widget.ImageView;
-import android.widget.Spinner;
+import android.widget.TableLayout;
+import android.widget.TableRow;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public class SpraySchedulingActivity extends AppCompatActivity {
 
-    private TextView tvStartDate, tvEndDate;
-    private ImageView ivStartDatePicker, ivEndDatePicker;
-    private Spinner spinnerLocation;
-    private Button btnSave;
-    private Toolbar toolbar;
-
-    private Calendar startDateCalendar, endDateCalendar;
-    private SimpleDateFormat dateFormat;
+    private MaterialButton btnDateRange, btnSubmit;
+    private TextView tvSelectedDateRange;
+    private TextInputEditText etLocation;
+    private TableLayout tableRecommendations;
+    private String startDate, endDate;
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -51,162 +47,133 @@ public class SpraySchedulingActivity extends AppCompatActivity {
         // Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
+        FirebaseUser currentUser = mAuth.getCurrentUser();
 
-        // Initialize date format
-        dateFormat = new SimpleDateFormat("MMM dd, yyyy", Locale.US);
-        startDateCalendar = Calendar.getInstance();
-        endDateCalendar = Calendar.getInstance();
-
-        // Initialize toolbar
-        toolbar = findViewById(R.id.toolbar);
+        // Setup toolbar
+        Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         getSupportActionBar().setDisplayShowHomeEnabled(true);
 
-        // Initialize views
-        tvStartDate = findViewById(R.id.tvStartDate);
-        tvEndDate = findViewById(R.id.tvEndDate);
-        ivStartDatePicker = findViewById(R.id.ivStartDatePicker);
-        ivEndDatePicker = findViewById(R.id.ivEndDatePicker);
-        spinnerLocation = findViewById(R.id.spinnerLocation);
-        btnSave = findViewById(R.id.btnSave);
+        // Initialize UI components
+        btnDateRange = findViewById(R.id.btnDateRange);
+        tvSelectedDateRange = findViewById(R.id.tvSelectedDateRange);
+        etLocation = findViewById(R.id.etLocation);
+        btnSubmit = findViewById(R.id.btnSubmit);
+        tableRecommendations = findViewById(R.id.tableRecommendations);
 
-        // Set up location spinner
-        setupLocationSpinner();
+        btnDateRange.setOnClickListener(v -> showDatePicker());
+        btnSubmit.setOnClickListener(v -> saveSchedule());
 
-        // Set up date pickers
-        ivStartDatePicker.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDatePickerDialog(true);
-            }
-        });
-
-        ivEndDatePicker.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showDatePickerDialog(false);
-            }
-        });
-
-        // Set up save button
-        btnSave.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveScheduleData();
-            }
-        });
+        if (currentUser != null) {
+            loadRecommendations(currentUser.getUid());
+        }
     }
 
-    private void setupLocationSpinner() {
-        // Create an array of locations
-        String[] locations = new String[] {
-                "Select Location", "North Orchard", "South Orchard", "East Farm", "West Farm", "Central Garden"
-        };
+    private void showDatePicker() {
+        MaterialDatePicker<androidx.core.util.Pair<Long, Long>> dateRangePicker =
+                MaterialDatePicker.Builder.dateRangePicker().setTitleText("Select Date Range").build();
 
-        // Create adapter for spinner
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                this, android.R.layout.simple_spinner_item, locations);
+        dateRangePicker.addOnPositiveButtonClickListener(selection -> {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            startDate = sdf.format(new Date(selection.first));
+            endDate = sdf.format(new Date(selection.second));
+            tvSelectedDateRange.setText(startDate + " to " + endDate);
+        });
 
-        // Specify the layout to use when the list of choices appears
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
-        // Apply the adapter to the spinner
-        spinnerLocation.setAdapter(adapter);
+        dateRangePicker.show(getSupportFragmentManager(), "DATE_PICKER");
     }
 
-    private void showDatePickerDialog(final boolean isStartDate) {
-        Calendar calendar = isStartDate ? startDateCalendar : endDateCalendar;
+    private void saveSchedule() {
+        if (startDate == null || endDate == null) {
+            Toast.makeText(this, "Please select a date range", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-        DatePickerDialog datePickerDialog = new DatePickerDialog(
-                this,
-                new DatePickerDialog.OnDateSetListener() {
+        String location = etLocation.getText().toString().trim();
+        if (location.isEmpty()) {
+            etLocation.setError("Location is required");
+            return;
+        }
+
+        FirebaseUser currentUser = mAuth.getCurrentUser();
+        if (currentUser != null) {
+            String userId = currentUser.getUid();
+            String scheduleId = UUID.randomUUID().toString();
+
+            Map<String, Object> schedule = new HashMap<>();
+            schedule.put("startDate", startDate);
+            schedule.put("endDate", endDate);
+            schedule.put("location", location);
+
+            mDatabase.child("users").child(userId)
+                    .child("apple").child("sprayScheduling").child(scheduleId)
+                    .setValue(schedule)
+                    .addOnSuccessListener(aVoid -> {
+                        Toast.makeText(SpraySchedulingActivity.this, "Schedule saved", Toast.LENGTH_SHORT).show();
+
+                        // 🔹 Add Fertilizer Recommendations (Can be changed to AI-based later)
+                        addFertilizerRecommendation(userId, "Urea", "1 July - 10 July");
+                        addFertilizerRecommendation(userId, "Potassium Sulfate", "15 July - 25 July");
+
+                        // Load recommendations
+                        loadRecommendations(userId);
+                    });
+        }
+    }
+
+    // 🔹 Method to add Fertilizer Recommendations to Firebase
+    private void addFertilizerRecommendation(String userId, String fertilizerName, String bestDates) {
+        DatabaseReference recommendationsRef = mDatabase.child("users").child(userId)
+                .child("apple").child("sprayScheduling").child("recommendations");
+
+        String recommendationId = UUID.randomUUID().toString();
+        Map<String, Object> recommendation = new HashMap<>();
+        recommendation.put("fertilizerName", fertilizerName);
+        recommendation.put("bestDates", bestDates);
+
+        recommendationsRef.child(recommendationId).setValue(recommendation)
+                .addOnSuccessListener(aVoid -> Toast.makeText(SpraySchedulingActivity.this,
+                        "Fertilizer recommendation added", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(SpraySchedulingActivity.this,
+                        "Failed to add recommendation: " + e.getMessage(), Toast.LENGTH_SHORT).show());
+    }
+
+    // 🔹 Load Recommendations from Firebase and display in Table
+    private void loadRecommendations(String userId) {
+        mDatabase.child("users").child(userId).child("apple").child("sprayScheduling")
+                .child("recommendations")
+                .addValueEventListener(new ValueEventListener() {
                     @Override
-                    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
-                        if (isStartDate) {
-                            startDateCalendar.set(Calendar.YEAR, year);
-                            startDateCalendar.set(Calendar.MONTH, month);
-                            startDateCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                            tvStartDate.setText(dateFormat.format(startDateCalendar.getTime()));
-                        } else {
-                            endDateCalendar.set(Calendar.YEAR, year);
-                            endDateCalendar.set(Calendar.MONTH, month);
-                            endDateCalendar.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                            tvEndDate.setText(dateFormat.format(endDateCalendar.getTime()));
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+                        // Clear table before adding new rows
+                        tableRecommendations.removeViews(1, Math.max(0, tableRecommendations.getChildCount() - 1));
+
+                        for (DataSnapshot snapshot : dataSnapshot.getChildren()) {
+                            String fertilizerName = snapshot.child("fertilizerName").getValue(String.class);
+                            String bestDates = snapshot.child("bestDates").getValue(String.class);
+
+                            TableRow row = new TableRow(SpraySchedulingActivity.this);
+                            row.setPadding(0, 8, 0, 8);
+
+                            TextView tvFertilizer = new TextView(SpraySchedulingActivity.this);
+                            tvFertilizer.setText(fertilizerName);
+                            tvFertilizer.setPadding(8, 8, 8, 8);
+
+                            TextView tvDates = new TextView(SpraySchedulingActivity.this);
+                            tvDates.setText(bestDates);
+                            tvDates.setPadding(8, 8, 8, 8);
+
+                            row.addView(tvFertilizer);
+                            row.addView(tvDates);
+
+                            tableRecommendations.addView(row);
                         }
                     }
-                },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
-        );
 
-        datePickerDialog.show();
-    }
-
-    private void saveScheduleData() {
-        // Validate inputs
-        String startDate = tvStartDate.getText().toString();
-        String endDate = tvEndDate.getText().toString();
-        String location = spinnerLocation.getSelectedItem().toString();
-
-        if (startDate.equals("Select date")) {
-            Toast.makeText(this, "Please select a start date", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (endDate.equals("Select date")) {
-            Toast.makeText(this, "Please select an end date", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (location.equals("Select Location")) {
-            Toast.makeText(this, "Please select a location", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Check if end date is after start date
-        if (endDateCalendar.before(startDateCalendar)) {
-            Toast.makeText(this, "End date must be after start date", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Get current user
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        if (currentUser == null) {
-            // User not logged in, redirect to login
-            Toast.makeText(this, "Please log in to save data", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        String userId = currentUser.getUid();
-        String email = currentUser.getEmail();
-
-        // Create data object
-        Map<String, Object> scheduleData = new HashMap<>();
-        scheduleData.put("userId", userId);
-        scheduleData.put("email", email);
-        scheduleData.put("startDate", startDate);
-        scheduleData.put("endDate", endDate);
-        scheduleData.put("location", location);
-        scheduleData.put("createdAt", Calendar.getInstance().getTimeInMillis());
-
-        // Save to Firebase
-        String scheduleId = mDatabase.child("spray_schedules").push().getKey();
-
-        mDatabase.child("spray_schedules").child(scheduleId).setValue(scheduleData)
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(SpraySchedulingActivity.this,
-                                    "Schedule saved successfully", Toast.LENGTH_SHORT).show();
-                            finish(); // Go back to dashboard
-                        } else {
-                            Toast.makeText(SpraySchedulingActivity.this,
-                                    "Failed to save schedule: " + task.getException().getMessage(),
-                                    Toast.LENGTH_SHORT).show();
-                        }
+                    public void onCancelled(DatabaseError error) {
+                        Toast.makeText(SpraySchedulingActivity.this, "Failed to load recommendations", Toast.LENGTH_SHORT).show();
                     }
                 });
     }
@@ -214,7 +181,7 @@ public class SpraySchedulingActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
-            onBackPressed(); // Handle back button in toolbar
+            onBackPressed();
             return true;
         }
         return super.onOptionsItemSelected(item);

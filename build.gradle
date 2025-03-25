@@ -4,7 +4,13 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.3.0'
-        classpath 'com.google.gms:google-services:4.4.2'  // Update to latest version
+        classpath 'com.android.tools.build:gradle:8.8.1'  // Downgrade from 8.9.0 to 8.8.1
+        classpath 'com.google.gms:google-services:4.4.2'  // Already the latest version
     }
+}
+
+
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }

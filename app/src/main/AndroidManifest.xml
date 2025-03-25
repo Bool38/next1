@@ -10,22 +10,24 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.Osignup"
+        android:theme="@style/Theme.SprayScheduling"
         tools:targetApi="31">
+
+        <!-- Entry point (Launcher Activity) -->
         <activity
             android:name=".SignupActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".LoginActivity"
-            android:exported="true" />
-        <activity android:name=".DashboardActivity" />
-        <activity android:name=".SpraySchedulingActivity" />
-    </application>
 
+        <!-- Other Activities (Remove duplicates) -->
+        <activity android:name=".LoginActivity" android:exported="true" />
+        <activity android:name=".DashboardActivity" android:exported="false" />
+        <activity android:name=".AppleSectionActivity" android:exported="false" />
+        <activity android:name=".SpraySchedulingActivity" android:exported="false" />
+
+    </application>
 </manifest>

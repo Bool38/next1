@@ -1,7 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="colorPrimary">#2196F3</color>
-    <color name="colorPrimaryDark">#1976D2</color>
-    <color name="colorAccent">#03A9F4</color>
-    <color name="teal_700">#018786</color>
+    <!-- Primary colors -->
+    <color name="colorPrimary">#4CAF50</color>
+    <color name="colorPrimaryDark">#388E3C</color>
+    <color name="colorAccent">#8BC34A</color>
+
+    <!-- Secondary colors -->
+    <color name="colorSecondary">#FFC107</color>
+    <color name="colorSecondaryVariant">#FFB300</color>
+
+    <!-- Surface colors -->
+    <color name="colorSurface">#FFFFFF</color>
+    <color name="colorOnSurface">#212121</color>
+
+    <!-- Text colors -->
+    <color name="textColorPrimary">#212121</color>
+    <color name="textColorSecondary">#757575</color>
+    <color name="textColorDisabled">#9E9E9E</color>
+
+    <!-- Background colors -->
+    <color name="backgroundLight">#F5F5F5</color>
+    <color name="backgroundDark">#E0E0E0</color>
+
+    <!-- Standard colors -->
+    <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
+    <color name="transparent">#00000000</color>
+
+    <!-- State colors -->
+    <color name="colorError">#F44336</color>
+    <color name="colorSuccess">#4CAF50</color>
+    <color name="colorWarning">#FFC107</color>
+    <color name="colorInfo">#2196F3</color>
+
+    <!-- Button colors -->
+    <color name="buttonNormal">#4CAF50</color>
+    <color name="buttonPressed">#388E3C</color>
+    <color name="buttonDisabled">#9E9E9E</color>
+
+    <!-- Table colors -->
+    <color name="tableHeaderBackground">#4CAF50</color>
+    <color name="tableRowEven">#FFFFFF</color>
+    <color name="tableRowOdd">#F5F5F5</color>
 </resources>
