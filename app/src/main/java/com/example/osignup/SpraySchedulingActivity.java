@@ -10,6 +10,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.example.osignup.Weather.WeatherService;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.textfield.TextInputEditText;
@@ -38,6 +39,7 @@ public class SpraySchedulingActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
+    private WeatherService weatherService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +50,9 @@ public class SpraySchedulingActivity extends AppCompatActivity {
         mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference();
         FirebaseUser currentUser = mAuth.getCurrentUser();
+
+        // Initialize Weather Service
+        weatherService = new WeatherService(this);
 
         // Setup toolbar
         Toolbar toolbar = findViewById(R.id.toolbar);
@@ -112,6 +117,9 @@ public class SpraySchedulingActivity extends AppCompatActivity {
                     .addOnSuccessListener(aVoid -> {
                         Toast.makeText(SpraySchedulingActivity.this, "Schedule saved", Toast.LENGTH_SHORT).show();
 
+                        // 🔹 Fetch and store weather data
+                        fetchWeatherData(location, startDate, endDate);
+
                         // 🔹 Add Fertilizer Recommendations (Can be changed to AI-based later)
                         addFertilizerRecommendation(userId, "Urea", "1 July - 10 July");
                         addFertilizerRecommendation(userId, "Potassium Sulfate", "15 July - 25 July");
@@ -120,6 +128,26 @@ public class SpraySchedulingActivity extends AppCompatActivity {
                         loadRecommendations(userId);
                     });
         }
+    }
+
+    // 🔹 Fetch weather data using WeatherService
+    private void fetchWeatherData(String location, String startDate, String endDate) {
+        Toast.makeText(this, "Fetching weather data...", Toast.LENGTH_SHORT).show();
+
+        weatherService.fetchAndStoreWeatherData(location, startDate, endDate,
+                new WeatherService.WeatherServiceCallback() {
+                    @Override
+                    public void onSuccess() {
+                        runOnUiThread(() ->
+                                Toast.makeText(SpraySchedulingActivity.this, "Weather data stored successfully", Toast.LENGTH_SHORT).show());
+                    }
+
+                    @Override
+                    public void onError(String errorMessage) {
+                        runOnUiThread(() ->
+                                Toast.makeText(SpraySchedulingActivity.this, "Failed to fetch weather: " + errorMessage, Toast.LENGTH_SHORT).show());
+                    }
+                });
     }
 
     // 🔹 Method to add Fertilizer Recommendations to Firebase
@@ -146,7 +174,6 @@ public class SpraySchedulingActivity extends AppCompatActivity {
                 .addValueEventListener(new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
-                        // Clear table before adding new rows
                         tableRecommendations.removeViews(1, Math.max(0, tableRecommendations.getChildCount() - 1));
 
                         for (DataSnapshot snapshot : dataSnapshot.getChildren()) {

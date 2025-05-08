@@ -29,26 +29,37 @@ android {
         targetCompatibility JavaVersion.VERSION_11
     }
 }
-
 dependencies {
-    // Material Design (Updated)
+    // ✅ Material & UI Components
     implementation 'com.google.android.material:material:1.9.0'
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-
-    // Firebase (Updated)
-    implementation platform('com.google.firebase:firebase-bom:33.10.0')
-    implementation 'com.google.firebase:firebase-auth:22.1.1'
-    implementation 'com.google.firebase:firebase-database:20.2.2'
-    implementation 'com.google.firebase:firebase-analytics'
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.activity:activity:1.9.0'
 
-    // Fix androidx.activity version for compileSdk 34
-    implementation 'androidx.activity:activity:1.9.0'  // Downgraded to avoid compileSdk 35 conflict
+    // ✅ Firebase (using BoM for version consistency)
+    implementation platform('com.google.firebase:firebase-bom:33.10.0')
+    implementation 'com.google.firebase:firebase-auth'
+    implementation 'com.google.firebase:firebase-database'
+    implementation 'com.google.firebase:firebase-analytics'
 
-    // Other dependencies
-    implementation libs.constraintlayout
+    // ✅ Networking - Retrofit + OkHttp + Volley
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.11.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.11.0'
+    implementation 'com.android.volley:volley:1.2.1' // ✅ Added Volley
+
+    // ✅ JSON Parsing
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // ✅ Image Loading (for weather icons, etc.)
+    implementation 'com.github.bumptech.glide:glide:4.14.2'
+    annotationProcessor 'com.github.bumptech.glide:compiler:4.14.2'
+
+    // ✅ Testing Libraries (adjust if you're not using version catalog)
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 }
+

@@ -24,7 +24,7 @@ public class DashboardActivity extends AppCompatActivity {
 
     private TextView tvUsername, tvEmail;
     private CardView cardApple;
-    private Button btnLogout;
+    private Button btnLogout, btnWeather;
     private ImageButton btnEditProfile;
     private FirebaseAuth mAuth;
     private DatabaseReference mDatabase;
@@ -48,6 +48,7 @@ public class DashboardActivity extends AppCompatActivity {
         cardApple = findViewById(R.id.cardApple);
         btnLogout = findViewById(R.id.btnLogout);
         btnEditProfile = findViewById(R.id.btnEditProfile);
+        btnWeather = findViewById(R.id.btnWeather);  // Weather Button
 
         // Check if user is logged in
         if (currentUser == null) {
@@ -69,18 +70,15 @@ public class DashboardActivity extends AppCompatActivity {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
                         if (dataSnapshot.exists()) {
-                            // Bug Fix: Handle username properly
                             String username = dataSnapshot.getValue(String.class);
                             if (username != null && !username.isEmpty()) {
                                 tvUsername.setText(username);
                             } else {
                                 tvUsername.setText("User");
-                                // If username doesn't exist, create one based on email
                                 createDefaultUsername(userId, currentUser.getEmail());
                             }
                         } else {
                             tvUsername.setText("User");
-                            // If username node doesn't exist, create one based on email
                             createDefaultUsername(userId, currentUser.getEmail());
                         }
                     }
@@ -94,7 +92,7 @@ public class DashboardActivity extends AppCompatActivity {
                     }
                 });
 
-        // Button click listeners
+        // Apple card click
         cardApple.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,6 +100,7 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
+        // Logout button click
         btnLogout.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -111,10 +110,19 @@ public class DashboardActivity extends AppCompatActivity {
             }
         });
 
+        // Edit profile placeholder
         btnEditProfile.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Toast.makeText(DashboardActivity.this, "Edit Profile feature coming soon", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        // Weather button click listener
+        btnWeather.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(DashboardActivity.this, WeatherActivity.class));
             }
         });
     }

@@ -1,6 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.example.osignup">
+
+    <!-- Permissions -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -23,11 +28,17 @@
             </intent-filter>
         </activity>
 
-        <!-- Other Activities (Remove duplicates) -->
+        <!-- Other Activities -->
         <activity android:name=".LoginActivity" android:exported="true" />
         <activity android:name=".DashboardActivity" android:exported="false" />
         <activity android:name=".AppleSectionActivity" android:exported="false" />
         <activity android:name=".SpraySchedulingActivity" android:exported="false" />
+        <activity
+            android:name=".WeatherActivity"
+            android:exported="false"
+            android:label="Weather Information" />
+
+        <!-- (Optional) Weather update background service can be added here -->
 
     </application>
 </manifest>

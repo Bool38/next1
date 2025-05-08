@@ -8,6 +8,7 @@
     <string name="signup">Signup</string>
     <string name="already_have_account">Already have an account?</string>
     <string name="login">Login</string>
+
     <!-- Dashboard Screen -->
     <string name="welcome">Welcome,</string>
     <string name="categories">Categories</string>
@@ -22,4 +23,15 @@
     <string name="location">Location</string>
     <string name="select_date">Select date</string>
     <string name="save">Save</string>
+
+    <!-- Weather Screen -->
+    <string name="weather_information">Weather Information</string>
+    <string name="search">Search</string>
+    <string name="use_saved_location">Use Saved Location</string>
+    <string name="enter_city_name">Enter city name</string>
+    <string name="refresh_weather">Refresh Weather</string>
+    <string name="humidity">Humidity</string>
+    <string name="feels_like">Feels Like</string>
+    <string name="wind">Wind</string>
+    <string name="weather_icon">Weather Icon</string>
 </resources>

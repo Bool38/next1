@@ -166,6 +166,19 @@
         </androidx.cardview.widget.CardView>
     </GridLayout>
 
+    <!-- Weather Button -->
+    <Button
+        android:id="@+id/btnWeather"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Weather Information"
+        android:drawableStart="@android:drawable/ic_menu_compass"
+        android:padding="12dp"
+        android:layout_margin="8dp"
+        app:layout_constraintBottom_toTopOf="@id/btnLogout"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
     <!-- Logout Button -->
     <Button
         android:id="@+id/btnLogout"
@@ -175,6 +188,8 @@
         android:backgroundTint="#F44336"
         android:text="Logout"
         android:textColor="#FFFFFF"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
